@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Circle Ball Game</title>
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#000000" />
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('service-worker.js').then(
+          function (registration) {
+            console.log('ServiceWorker registration successful with scope: ', registration.scope);
+          },
+          function (err) {
+            console.log('ServiceWorker registration failed: ', err);
+          }
+        );
+      });
+    }
+  </script>
+</head>
+<body>
+  <!-- Oyun içeriği burada başlar -->
+  <!-- Aşağıdaki satırı kendi game.html içeriğinizle değiştirin -->
+  <!-- Örnek: <canvas id="gameCanvas" width="1000" height="1000"></canvas> -->
+  <!-- ... -->
+</body>
+</html>

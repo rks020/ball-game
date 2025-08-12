@@ -1,0 +1,3219 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+  <meta charset="UTF-8" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+  <title>Circle Ball Game</title>
+
+  <style>
+
+    body {
+
+      margin: 0;
+
+      background-color: #202036;
+
+      overflow: hidden;
+
+      position: relative;
+
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+
+      touch-action: none;
+
+    }
+
+    #gameCanvas {
+
+      border: none;
+
+      display: block;
+
+      margin: 0 auto;
+
+      background-color: #32324a;
+
+    }
+
+    #timeLeft, #powerLeft, #score, #rank, #levelText, #lives {
+
+      position: absolute;
+
+      background: rgba(255, 255, 255, 0.1);
+
+      padding: 6px 12px;
+
+      border-radius: 10px;
+
+      color: #fff;
+
+      font-size: 18px;
+
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+
+    }
+
+    #timeLeft { top: 10px; left: calc(50% + 100px); transform: none; }
+
+    #powerLeft { top: 10px; right: calc(50% + 100px); left: auto; transform: none; font-size: 16px; }
+
+    #score { top: 50px; left: calc(50% + 100px); }
+
+    #rank { top: 90px; left: calc(50% + 100px); }
+
+    #levelText { top: 50px; right: calc(50% + 100px); }
+
+    #lives { top: 90px; right: calc(50% + 100px); }
+
+    .message, .comboMessage {
+
+      position: absolute;
+
+      top: 50%; left: 50%;
+
+      transform: translate(-50%, -50%);
+
+      font-size: 48px;
+
+      text-align: center;
+
+      padding: 20px 30px;
+
+      border-radius: 10px;
+
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.7);
+
+      display: none;
+
+      color: #fff;
+
+    }
+
+    #gameOver { background: rgba(255, 0, 0, 0.8); }
+
+    #youWin { background: rgba(0, 200, 0, 0.8); }
+
+    .comboMessage { background: rgba(255, 215, 0, 0.8); font-size: 36px; }
+
+    .menuButton {
+
+      position: absolute;
+
+      left: 50%;
+
+      transform: translateX(-50%);
+
+      padding: 12px 24px;
+
+      font-size: 20px;
+
+      cursor: pointer;
+
+      background: linear-gradient(135deg, #ff7e67, #ff3f3f);
+
+      border: none;
+
+      color: #fff;
+
+      border-radius: 8px;
+
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+
+      transition: transform 0.2s, box-shadow 0.2s;
+
+      margin: 5px;
+
+    }
+
+    .menuButton:hover {
+
+      transform: translateX(-50%) scale(1.05);
+
+      box-shadow: 0 6px 10px rgba(0, 0, 0, 0.5);
+
+    }
+
+    #startBtn { top: 40%; }
+
+    #instructionBtn { top: 50%; }
+
+    #restartBtn {
+
+      top: 60%;
+
+      display: none;
+
+      background: linear-gradient(135deg, #4ca1af, #2c3e50);
+
+    }
+
+    #highScoreBtn {
+
+      top: 67%;
+
+      display: none;
+
+      background: linear-gradient(135deg, #FFD700, #FFA500);
+
+    }
+
+    #homeBtn {
+
+      top: 74%;
+
+      display: none;
+
+      background: linear-gradient(135deg, #4ca1af, #2c3e50);
+
+    }
+
+    #instructionsOverlay, #highScoreOverlay {
+
+      position: fixed;
+
+      top: 0; left: 0;
+
+      width: 100%; height: 100%;
+
+      background: rgba(0, 0, 0, 0.85);
+
+      display: none;
+
+      justify-content: center;
+
+      align-items: center;
+
+      color: #fff;
+
+      text-align: center;
+
+      padding: 20px;
+
+      box-sizing: border-box;
+
+      z-index: 1000;
+
+    }
+
+    #instructionsContent {
+
+      max-height: 80vh;
+
+      overflow-y: auto;
+
+      padding: 10px;
+
+    }
+
+    #instructionsOverlay p, #highScoreOverlay p {
+
+      font-size: 20px;
+
+      line-height: 1.5;
+
+      max-width: 600px;
+
+      margin: 0 auto 20px;
+
+    }
+
+    #closeInstructions, #closeHighScore, #backBtn {
+
+      padding: 10px 20px;
+
+      font-size: 18px;
+
+      cursor: pointer;
+
+      background: #444;
+
+      border: none;
+
+      color: #fff;
+
+      border-radius: 8px;
+
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+
+      transition: transform 0.2s, box-shadow 0.2s;
+
+    }
+
+    #closeInstructions:hover, #closeHighScore:hover, #backBtn:hover {
+
+      transform: scale(1.05);
+
+      box-shadow: 0 6px 10px rgba(0, 0, 0, 0.5);
+
+    }
+
+    @keyframes shake {
+
+      0% { transform: translate(0, 0); }
+
+      20% { transform: translate(-5px, 5px); }
+
+      40% { transform: translate(5px, -5px); }
+
+      60% { transform: translate(-5px, 5px); }
+
+      80% { transform: translate(5px, -5px); }
+
+      100% { transform: translate(0, 0); }
+
+    }
+
+    .shake { animation: shake 0.5s; }
+
+    @keyframes pulse {
+
+      0% { transform: translateX(-50%) scale(1); }
+
+      50% { transform: translateX(-50%) scale(1.2); }
+
+      100% { transform: translateX(-50%) scale(1); }
+
+    }
+
+    .pulse { animation: pulse 1s ease-in-out 2; }
+
+    @keyframes growShrink {
+
+      0% { transform: translateX(-50%) scale(1); }
+
+      50% { transform: translateX(-50%) scale(1.5); }
+
+      100% { transform: translateX(-50%) scale(1); }
+
+    }
+
+    .grow-shrink { animation: growShrink 0.5s ease-in-out; }
+
+    @keyframes fadeOut {
+
+      0% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+
+      100% { opacity: 0; transform: translate(-50%, -70%) scale(1.2); }
+
+    }
+
+    .fade-out { animation: fadeOut 1s forwards; }
+
+    .ball-icon {
+
+      display: inline-block;
+
+      width: 20px;
+
+      height: 20px;
+
+      border-radius: 50%;
+
+      margin-right: 10px;
+
+      vertical-align: middle;
+
+    }
+
+  </style>
+
+</head>
+
+<body>
+
+  <canvas id="gameCanvas" width="1000" height="1000"></canvas>
+
+  
+
+  <!-- UI Texts -->
+
+  <div id="timeLeft">Time Left: 20</div>
+
+  <div id="powerLeft">Power: 100%</div>
+
+  <div id="score">Score: 0</div>
+
+  <div id="rank">Rank: -</div>
+
+  <div id="levelText">Level: 1</div>
+
+  <div id="lives">Lives: 3</div>
+
+  
+
+  <!-- Message Areas -->
+
+  <div id="gameOver" class="message">
+
+    <span id="gameOverText">Game Over!</span><br>
+
+    <button id="homeBtn" class="menuButton">Home</button>
+
+  </div>
+
+  <div id="youWin" class="message">You Win!</div>
+
+  <div id="comboMessage" class="comboMessage"></div>
+
+  
+
+  <!-- Menu Buttons -->
+
+  <button id="startBtn" class="menuButton">Start</button>
+
+  <button id="instructionBtn" class="menuButton">Instructions</button>
+
+  <button id="restartBtn" class="menuButton">Restart</button>
+
+  <button id="highScoreBtn" class="menuButton">High Score</button>
+
+  
+
+  <!-- Instructions Overlay -->
+
+  <div id="instructionsOverlay">
+
+    <div id="instructionsContent">
+
+      <p><strong>How to Play</strong></p>
+
+      <p>- Drag and launch the white ball to collect colored balls.</p>
+
+      <p>- Avoid the black ball or lose a life!</p>
+
+      <p><strong>Special Balls:</strong></p>
+
+      <p><span class="ball-icon" style="background-color: purple;"></span> <strong>Black Hole</strong>: Attracts all balls except black ones.</p>
+
+      <p><span class="ball-icon" style="background-color: orange;"></span> <strong>Extra Time</strong>: Adds 5 seconds to the timer.</p>
+
+      <p><span class="ball-icon" style="background-color: gold;"></span> <strong>Power Boost</strong>: Increases launch power and range.</p>
+
+      <p><span class="ball-icon" style="background-color: blue;"></span> <strong>Blue Barrier</strong>: Protects from black balls.</p>
+
+      <p><span class="ball-icon" style="background-color: cyan;"></span> <strong>Electric</strong>: Zaps two nearby balls.</p>
+
+      <p><span class="ball-icon" style="background-color: pink;"></span> <strong>Clone</strong>: Creates a second controllable ball.</p>
+
+      <p><span class="ball-icon" style="background-color: lightblue;"></span> <strong>Freeze</strong>: Freezes other balls for 5 seconds.</p>
+
+      <p><span class="ball-icon" style="background-color: red;"></span> <strong>Guided Missile</strong>: Launches a guided ball that destroys a black ball.</p>
+
+      <p><span class="ball-icon" style="background-color: #00FF00;"></span> <strong>Teleport</strong>: Slows time for 2.5s, then teleports your ball.</p>
+
+      <p><span class="ball-icon" style="background-color: magenta;"></span> <strong>Multiplier</strong>: Doubles colored balls for 8 seconds.</p>
+
+      <p><span class="ball-icon" style="background-color: hsl(0, 100%, 50%);"></span> <strong>Color Switch</strong>: Turns black balls into colored balls.</p>
+
+      <p><span class="ball-icon" style="background-color: #8B0000;"></span> <strong>Boom Ball</strong>: Sends a fast blastwave that destroys balls it touches, scoring points.</p>
+
+      <p><span class="ball-icon" style="background-color: #D3D3D3;"></span> <strong>Ghost Ball</strong>: Grants 5s of invincibility, speed boost, and increases your ball's size by 75%.</p>
+
+      <p>- Special balls reset and respawn each level.</p>
+
+      <p>- The circle expands at levels 5, 10, and 15!</p>
+
+      <button id="backBtn">Back</button>
+
+    </div>
+
+  </div>
+
+  
+
+  <!-- High Score Overlay -->
+
+  <div id="highScoreOverlay">
+
+    <div>
+
+      <p id="highScoreText">High Score: 0</p>
+
+      <p id="highRankText">High Rank: -</p>
+
+      <p id="highLevelText">Highest Level: 1</p>
+
+      <button id="closeHighScore">Close</button>
+
+    </div>
+
+  </div>
+
+  
+
+  <!-- Audio Files -->
+
+  <audio id="collisionSound" src="https://www.soundjay.com/buttons/sounds/button-16a.mp3" preload="auto"></audio>
+
+  <audio id="launchSound" src="https://cdn.freesound.org/previews/65/65733_118241-lq.mp3" preload="auto"></audio>
+
+  <audio id="powerUpSound" src="https://www.soundjay.com/buttons/sounds/button-3.mp3" preload="auto"></audio>
+
+  <audio id="gameOverSound" src="https://www.soundjay.com/buttons/sounds/button-10.mp3" preload="auto"></audio>
+
+  <audio id="electricSound" src="https://cdn.freesound.org/previews/678/678372_14784311-hq.mp3" preload="auto"></audio>
+
+  <audio id="shieldSound" src="https://cdn.freesound.org/previews/322/322159_5514134-lq.mp3" preload="auto"></audio>
+
+  <audio id="teleportSound" src="https://cdn.freesound.org/previews/65/65733_118241-lq.mp3" preload="auto"></audio>
+
+  <audio id="powerBoostSound" src="https://cdn.freesound.org/previews/220/220173_4100837-lq.mp3" preload="auto"></audio>
+
+  <audio id="guidedMissileSound" src="https://cdn.freesound.org/previews/333/333998_321967-lq.mp3" preload="auto"></audio>
+
+  <audio id="freezeSound" src="https://cdn.freesound.org/previews/262/262633_3175560-lq.mp3" preload="auto"></audio>
+
+  <audio id="boomSound" src="https://cdn.freesound.org/previews/171/171671_2435678-lq.mp3" preload="auto"></audio>
+
+  <audio id="ghostSound" src="https://cdn.freesound.org/previews/156/156859_1414026-lq.mp3" preload="auto"></audio>
+
+  
+
+  <script>
+
+    const canvas = document.getElementById('gameCanvas');
+
+    const ctx = canvas.getContext('2d');
+
+    
+
+    const timeLeftElement = document.getElementById('timeLeft');
+
+    const powerLeftElement = document.getElementById('powerLeft');
+
+    const scoreElement = document.getElementById('score');
+
+    const rankElement = document.getElementById('rank');
+
+    const levelTextElement = document.getElementById('levelText');
+
+    const livesElement = document.getElementById('lives');
+
+    const gameOverElement = document.getElementById('gameOver');
+
+    const youWinElement = document.getElementById('youWin');
+
+    const comboMessageElement = document.getElementById('comboMessage');
+
+    const startBtn = document.getElementById('startBtn');
+
+    const instructionBtn = document.getElementById('instructionBtn');
+
+    const restartBtn = document.getElementById('restartBtn');
+
+    const highScoreBtn = document.getElementById('highScoreBtn');
+
+    const homeBtn = document.getElementById('homeBtn');
+
+    const instructionsOverlay = document.getElementById('instructionsOverlay');
+
+    const highScoreOverlay = document.getElementById('highScoreOverlay');
+
+    const closeHighScore = document.getElementById('closeHighScore');
+
+    const backBtn = document.getElementById('backBtn');
+
+    const highScoreText = document.getElementById('highScoreText');
+
+    const highRankText = document.getElementById('highRankText');
+
+    const highLevelText = document.getElementById('highLevelText');
+
+    
+
+    const collisionSound = document.getElementById('collisionSound');
+
+    const launchSound = document.getElementById('launchSound');
+
+    const powerUpSound = document.getElementById('powerUpSound');
+
+    const gameOverSound = document.getElementById('gameOverSound');
+
+    const electricSound = document.getElementById('electricSound');
+
+    const shieldSound = document.getElementById('shieldSound');
+
+    const teleportSound = document.getElementById('teleportSound');
+
+    const powerBoostSound = document.getElementById('powerBoostSound');
+
+    const guidedMissileSound = document.getElementById('guidedMissileSound');
+
+    const freezeSound = document.getElementById('freezeSound');
+
+    const boomSound = document.getElementById('boomSound');
+
+    const ghostSound = document.getElementById('ghostSound');
+
+    
+
+    let circleRadius = 350;
+
+    const centerX = canvas.width / 2;
+
+    const centerY = canvas.height / 2;
+
+    
+
+    let gameStarted = false;
+
+    let gameOver = false;
+
+    let youWin = false;
+
+    
+
+    let ball = { x: centerX, y: centerY, radius: 10, baseRadius: 10, speedX: 0, speedY: 0, color: 'white', isClone: false };
+
+    let cloneBalls = [];
+
+    
+
+    let otherBalls = [];
+
+    let blackBalls = [];
+
+    let specialBalls = [];
+
+    let guidedMissiles = [];
+
+    
+
+    let timeLeft = 20;
+
+    let score = 0;
+
+    let highScore = localStorage.getItem('highScore') ? parseInt(localStorage.getItem('highScore')) : 0;
+
+    let highRank = localStorage.getItem('highRank') || '-';
+
+    let highLevel = localStorage.getItem('highLevel') ? parseInt(localStorage.getItem('highLevel')) : 1;
+
+    let level = 1;
+
+    let lives = 3;
+
+    
+
+    let lastTime = performance.now();
+
+    
+
+    let isDragging = false;
+
+    let dragStartX = 0;
+
+    let dragStartY = 0;
+
+    let dragStartTime = 0;
+
+    let showDragLine = false;
+
+    const maxDragTime = 3000;
+
+    const maxDragDistance = 100;
+
+    let currentPowerRatio = 1;
+
+    let powerBoostActive = false;
+
+    
+
+    let particles = [];
+
+    
+
+    let blackHoleActive = false;
+
+    let blackHoleTimer = 0;
+
+    
+
+    let whiteBallExploded = false;
+
+    
+
+    let barrierActive = false;
+
+    let barrierEndTime = 0;
+
+    const barrierDuration = 5000;
+
+    
+
+    let freezeActive = false;
+
+    let freezeEndTime = 0;
+
+    const freezeDuration = 5000;
+
+    
+
+    let teleportActive = false;
+
+    let teleportTargetBall = null;
+
+    let teleportEndTime = 0;
+
+    let teleportTargetX = 0;
+
+    let teleportTargetY = 0;
+
+    let teleportAnimationProgress = 0;
+
+    const teleportDuration = 2500;
+
+    const teleportAnimationDuration = 500;
+
+    
+
+    let ghostModeActive = false;
+
+    let ghostModeEndTime = 0;
+
+    const ghostModeDuration = 5000;
+
+    
+
+    let blastWave = null;
+
+    const blastWaveDuration = 1000; // 1 saniye
+
+    
+
+    let electricEffects = [];
+
+    
+
+    let glowTimer = 0;
+
+    
+
+    let specialBallCounters = {
+
+      blackhole: 0,
+
+      extraTime: 0,
+
+      powerBoost: 0,
+
+      blueBarrier: 0,
+
+      electric: 0,
+
+      clone: 0,
+
+      freeze: 0,
+
+      guidedMissile: 0,
+
+      teleport: 0,
+
+      multiplier: 0,
+
+      colorSwitch: 0,
+
+      boom: 0,
+
+      ghost: 0
+
+    };
+
+    
+
+    let comboCounter = 0;
+
+
+
+    function updateCircleRadius() {
+
+      if (level >= 15) circleRadius = 450;
+
+      else if (level >= 10) circleRadius = 400;
+
+      else if (level >= 5) circleRadius = 375;
+
+      else circleRadius = 350;
+
+    }
+
+    
+
+    function activateBarrier() {
+
+      barrierActive = true;
+
+      barrierEndTime = performance.now() + barrierDuration;
+
+    }
+
+    
+
+    function drawBarrier(ballObj) {
+
+      if (barrierActive && performance.now() < barrierEndTime) {
+
+        ctx.beginPath();
+
+        ctx.arc(ballObj.x, ballObj.y, ballObj.radius * 2, 0, Math.PI * 2);
+
+        ctx.strokeStyle = 'rgba(0, 150, 255, 0.7)';
+
+        ctx.lineWidth = 5;
+
+        ctx.stroke();
+
+        ctx.closePath();
+
+      } else {
+
+        barrierActive = false;
+
+      }
+
+    }
+
+    
+
+    function triggerCloneEffect() {
+
+      const newClone = { 
+
+        x: centerX, 
+
+        y: centerY, 
+
+        radius: 10, 
+
+        baseRadius: 10,
+
+        speedX: 0, 
+
+        speedY: 0, 
+
+        color: 'white',
+
+        isClone: true 
+
+      };
+
+      cloneBalls.push(newClone);
+
+      setTimeout(() => {
+
+        const index = cloneBalls.indexOf(newClone);
+
+        if (index !== -1) {
+
+          cloneBalls.splice(index, 1);
+
+          if (isDragging === newClone) isDragging = false;
+
+        }
+
+      }, 8000);
+
+    }
+
+    
+
+    function triggerFreezeEffect() {
+
+      freezeActive = true;
+
+      freezeEndTime = performance.now() + freezeDuration;
+
+    }
+
+    
+
+    function triggerTeleportEffect(targetBall) {
+
+      teleportActive = true;
+
+      teleportTargetBall = targetBall;
+
+      teleportEndTime = performance.now() + teleportDuration;
+
+      teleportAnimationProgress = 0;
+
+      const angle = Math.random() * Math.PI * 2;
+
+      const radius = Math.random() * (circleRadius - targetBall.radius);
+
+      teleportTargetX = centerX + Math.cos(angle) * radius;
+
+      teleportTargetY = centerY + Math.sin(angle) * radius;
+
+      targetBall.color = 'transparent';
+
+      animateTeleport(targetBall, teleportTargetX, teleportTargetY);
+
+    }
+
+    
+
+    function drawTeleportEffect(ballObj) {
+
+      if (teleportActive && ballObj === teleportTargetBall && performance.now() < teleportEndTime) {
+
+        ctx.beginPath();
+
+        ctx.arc(ballObj.x, ballObj.y, ballObj.radius * 1.5, 0, Math.PI * 2);
+
+        ctx.strokeStyle = 'rgba(0, 255, 0, 0.7)';
+
+        ctx.lineWidth = 3;
+
+        ctx.stroke();
+
+        ctx.closePath();
+
+      }
+
+    }
+
+    
+
+    function animateTeleport(ballObj, targetX, targetY) {
+
+      const startX = ballObj.x;
+
+      const startY = ballObj.y;
+
+      const startTime = performance.now();
+
+      
+
+      function animationStep() {
+
+        const elapsed = performance.now() - startTime;
+
+        const progress = Math.min(elapsed / teleportAnimationDuration, 1);
+
+        ballObj.x = startX + (targetX - startX) * progress;
+
+        ballObj.y = startY + (targetY - startY) * progress;
+
+        teleportAnimationProgress = progress;
+
+        ctx.beginPath();
+
+        ctx.arc(ballObj.x, ballObj.y, ballObj.radius * (1 + progress), 0, Math.PI * 2);
+
+        ctx.fillStyle = `rgba(0, 255, 0, ${1 - progress})`;
+
+        ctx.fill();
+
+        ctx.closePath();
+
+        if (progress < 1) requestAnimationFrame(animationStep);
+
+        else {
+
+          ballObj.color = 'white';
+
+          teleportActive = false;
+
+          teleportTargetBall = null;
+
+          teleportAnimationProgress = 0;
+
+          createParticles(ballObj.x, ballObj.y, '#00FF00');
+
+          teleportSound.currentTime = 0;
+
+          teleportSound.play();
+
+        }
+
+      }
+
+      requestAnimationFrame(animationStep);
+
+    }
+
+    
+
+    function triggerElectricEffect() {
+
+      if (otherBalls.length === 0) return;
+
+      let firstTargetIndex = Math.floor(Math.random() * otherBalls.length);
+
+      let firstTarget = otherBalls[firstTargetIndex];
+
+      electricEffects.push({
+
+        x1: ball.x,
+
+        y1: ball.y,
+
+        x2: firstTarget.x,
+
+        y2: firstTarget.y,
+
+        timer: 2000,
+
+        duration: 1000,
+
+        stage: 1
+
+      });
+
+      createParticles(firstTarget.x, firstTarget.y, firstTarget.color);
+
+      collisionSound.currentTime = 0;
+
+      collisionSound.play();
+
+      electricSound.currentTime = 0;
+
+      electricSound.play();
+
+      score += 1;
+
+      comboCounter++;
+
+      showComboMessage();
+
+      updateRank();
+
+      scoreElement.textContent = `Score: ${score}`;
+
+      otherBalls.splice(firstTargetIndex, 1);
+
+      if (otherBalls.length > 0) {
+
+        let secondTargetIndex = Math.floor(Math.random() * otherBalls.length);
+
+        let secondTarget = otherBalls[secondTargetIndex];
+
+        setTimeout(() => {
+
+          electricEffects.push({
+
+            x1: firstTarget.x,
+
+            y1: firstTarget.y,
+
+            x2: secondTarget.x,
+
+            y2: secondTarget.y,
+
+            timer: 2000,
+
+            duration: 1000,
+
+            stage: 2
+
+          });
+
+          createParticles(secondTarget.x, secondTarget.y, secondTarget.color);
+
+          collisionSound.currentTime = 0;
+
+          collisionSound.play();
+
+          electricSound.currentTime = 0;
+
+          electricSound.play();
+
+          score += 1;
+
+          comboCounter++;
+
+          showComboMessage();
+
+          updateRank();
+
+          scoreElement.textContent = `Score: ${score}`;
+
+          otherBalls.splice(secondTargetIndex, 1);
+
+        }, 300);
+
+      }
+
+    }
+
+    
+
+    function triggerGuidedMissile() {
+
+      if (blackBalls.length === 0) return;
+
+      const target = blackBalls[0];
+
+      guidedMissiles.push({
+
+        x: ball.x,
+
+        y: ball.y,
+
+        radius: 8,
+
+        speed: 4,
+
+        maxSpeed: 10,
+
+        timeAlive: 0,
+
+        color: 'white',
+
+        target: target
+
+      });
+
+      guidedMissileSound.currentTime = 0;
+
+      guidedMissileSound.play();
+
+    }
+
+    
+
+    function triggerBlastWave(x, y) {
+
+      blastWave = {
+
+        x: x,
+
+        y: y,
+
+        radius: 0,
+
+        maxRadius: ball.baseRadius * 30,
+
+        startTime: performance.now()
+
+      };
+
+    }
+
+    
+
+    function drawBlastWave() {
+
+      if (!blastWave) return;
+
+      const elapsed = performance.now() - blastWave.startTime;
+
+      const progress = Math.min(elapsed / blastWaveDuration, 1);
+
+      blastWave.radius = blastWave.maxRadius * progress;
+
+      
+
+      ctx.beginPath();
+
+      ctx.arc(blastWave.x, blastWave.y, blastWave.radius, 0, Math.PI * 2);
+
+      ctx.strokeStyle = `rgba(255, 69, 0, ${1 - progress})`;
+
+      ctx.lineWidth = 5;
+
+      ctx.stroke();
+
+      ctx.closePath();
+
+      
+
+      // Blastwave'in dokunduğu topları yok et
+
+      for (let i = otherBalls.length - 1; i >= 0; i--) {
+
+        const oBall = otherBalls[i];
+
+        const dist = Math.hypot(blastWave.x - oBall.x, blastWave.y - oBall.y);
+
+        if (dist < blastWave.radius + oBall.radius) {
+
+          createParticles(oBall.x, oBall.y, oBall.color);
+
+          score += 2;
+
+          otherBalls.splice(i, 1);
+
+          scoreElement.textContent = `Score: ${score}`;
+
+        }
+
+      }
+
+      for (let i = blackBalls.length - 1; i >= 0; i--) {
+
+        const blackBall = blackBalls[i];
+
+        const dist = Math.hypot(blastWave.x - blackBall.x, blastWave.y - blackBall.y);
+
+        if (dist < blastWave.radius + blackBall.radius) {
+
+          createParticles(blackBall.x, blackBall.y, blackBall.color);
+
+          score += 5;
+
+          blackBalls.splice(i, 1);
+
+          scoreElement.textContent = `Score: ${score}`;
+
+        }
+
+      }
+
+      for (let i = specialBalls.length - 1; i >= 0; i--) {
+
+        const sBall = specialBalls[i];
+
+        const dist = Math.hypot(blastWave.x - sBall.x, blastWave.y - sBall.y);
+
+        if (dist < blastWave.radius + sBall.radius) {
+
+          createParticles(sBall.x, sBall.y, sBall.color);
+
+          specialBalls.splice(i, 1);
+
+        }
+
+      }
+
+      
+
+      if (progress >= 1) blastWave = null;
+
+    }
+
+    
+
+    const specialBallInterval = setInterval(() => {
+
+      if (gameStarted && !gameOver) {
+
+        const availableTypes = Object.keys(specialBallCounters).filter(type => specialBallCounters[type] < 2);
+
+        if (availableTypes.length > 0 && Math.random() < 0.75) {
+
+          const type = availableTypes[Math.floor(Math.random() * availableTypes.length)];
+
+          specialBalls.push(createSpecialBall(type));
+
+          specialBallCounters[type]++;
+
+        }
+
+      }
+
+    }, 5000);
+
+    
+
+    function resetGame() {
+
+      level = 1;
+
+      score = 0;
+
+      lives = 3;
+
+      timeLeft = 20;
+
+      comboCounter = 0;
+
+      rankElement.textContent = `Rank: -`;
+
+      gameStarted = true;
+
+      gameOver = false;
+
+      youWin = false;
+
+      lastTime = performance.now();
+
+      initLevel(level);
+
+    }
+
+    
+
+    function initLevel(lv) {
+
+      lives = 3;
+
+      level = lv;
+
+      updateCircleRadius();
+
+      if (level >= 1 && level <= 5) {
+
+        timeLeft = 20;
+
+      } else if (level >= 6 && level <= 10) {
+
+        timeLeft = 30;
+
+      } else {
+
+        timeLeft = 30;
+
+      }
+
+      otherBalls = [];
+
+      blackBalls = [];
+
+      specialBalls = [];
+
+      guidedMissiles = [];
+
+      youWin = false;
+
+      whiteBallExploded = false;
+
+      ball.x = centerX;
+
+      ball.y = centerY;
+
+      ball.speedX = 0;
+
+      ball.speedY = 0;
+
+      ball.radius = ball.baseRadius;
+
+      cloneBalls = [];
+
+      currentPowerRatio = 1;
+
+      powerBoostActive = false;
+
+      blackHoleActive = false;
+
+      blackHoleTimer = 0;
+
+      freezeActive = false;
+
+      teleportActive = false;
+
+      teleportTargetBall = null;
+
+      teleportAnimationProgress = 0;
+
+      ghostModeActive = false;
+
+      ghostModeEndTime = 0;
+
+      blastWave = null;
+
+      comboCounter = 0;
+
+      rankElement.textContent = `Rank: -`;
+
+      specialBallCounters = {
+
+        blackhole: 0,
+
+        extraTime: 0,
+
+        powerBoost: 0,
+
+        blueBarrier: 0,
+
+        electric: 0,
+
+        clone: 0,
+
+        freeze: 0,
+
+        guidedMissile: 0,
+
+        teleport: 0,
+
+        multiplier: 0,
+
+        colorSwitch: 0,
+
+        boom: 0,
+
+        ghost: 0
+
+      };
+
+      timeLeftElement.textContent = `Time Left: ${Math.floor(timeLeft)}`;
+
+      powerLeftElement.textContent = `Power: 100%`;
+
+      scoreElement.textContent = `Score: ${score}`;
+
+      levelTextElement.textContent = `Level: ${lv}`;
+
+      livesElement.textContent = `Lives: ${lives}`;
+
+      timeLeftElement.style.display = 'block';
+
+      powerLeftElement.style.display = 'block';
+
+      scoreElement.style.display = 'block';
+
+      rankElement.style.display = 'block';
+
+      levelTextElement.style.display = 'block';
+
+      livesElement.style.display = 'block';
+
+      const ballCount = lv + 4;
+
+      for (let i = 0; i < ballCount; i++) {
+
+        otherBalls.push(createRandomBall());
+
+      }
+
+      let blackBallCount = 1;
+
+      if (lv >= 15) blackBallCount = 5;
+
+      else if (lv >= 10) blackBallCount = 3;
+
+      else if (lv >= 5) blackBallCount = 2;
+
+      for (let i = 0; i < blackBallCount; i++) {
+
+        blackBalls.push(createBlackBall());
+
+      }
+
+    }
+
+    
+
+    function nextLevel() {
+
+      initLevel(level + 1);
+
+    }
+
+    
+
+    function createRandomBall() {
+
+      const angle = Math.random() * Math.PI * 2;
+
+      const radius = circleRadius * 0.7;
+
+      const x = centerX + Math.cos(angle) * radius;
+
+      const y = centerY + Math.sin(angle) * radius;
+
+      const colors = ['#FF4B4B', '#5BC0EB', '#FDE74C', '#9BC53D', '#FA7921'];
+
+      return {
+
+        x,
+
+        y,
+
+        radius: 10,
+
+        speedX: Math.random() * 4 - 2,
+
+        speedY: Math.random() * 4 - 2,
+
+        color: colors[Math.floor(Math.random() * colors.length)]
+
+      };
+
+    }
+
+    
+
+    function createBlackBall() {
+
+      const angle = Math.random() * Math.PI * 2;
+
+      const radius = circleRadius * 0.7;
+
+      const x = centerX + Math.cos(angle) * radius;
+
+      const y = centerY + Math.sin(angle) * radius;
+
+      return {
+
+        x,
+
+        y,
+
+        radius: 12,
+
+        speedX: Math.random() * 8 - 4,
+
+        speedY: Math.random() * 8 - 4,
+
+        color: 'black'
+
+      };
+
+    }
+
+    
+
+    function createSpecialBall(type) {
+
+      const angle = Math.random() * Math.PI * 2;
+
+      const radius = circleRadius * 0.7;
+
+      const x = centerX + Math.cos(angle) * radius;
+
+      const y = centerY + Math.sin(angle) * radius;
+
+      let color = 'lime', glowColor = 'lime';
+
+      let letter = '';
+
+      if (type === 'blackhole') { 
+
+        color = 'purple'; 
+
+        glowColor = 'purple'; 
+
+        letter = 'B'; 
+
+      } else if (type === 'powerBoost') { 
+
+        color = 'gold'; 
+
+        glowColor = 'gold'; 
+
+        letter = 'P'; 
+
+      } else if (type === 'extraTime') {
+
+        color = 'orange';
+
+        glowColor = 'orange';
+
+        letter = 'T';
+
+      } else if (type === 'blueBarrier') {
+
+        color = 'blue';
+
+        glowColor = 'blue';
+
+        letter = 'S';
+
+      } else if (type === 'electric') {
+
+        color = 'cyan';
+
+        glowColor = 'cyan';
+
+        letter = 'L';
+
+      } else if (type === 'clone') {
+
+        color = 'pink';
+
+        glowColor = 'pink';
+
+        letter = 'C';
+
+      } else if (type === 'freeze') {
+
+        color = 'lightblue';
+
+        glowColor = 'lightblue';
+
+        letter = 'F';
+
+      } else if (type === 'guidedMissile') {
+
+        color = 'red';
+
+        glowColor = 'red';
+
+        letter = 'M';
+
+      } else if (type === 'teleport') {
+
+        color = '#00FF00';
+
+        glowColor = '#00FF00';
+
+        letter = 'T';
+
+      } else if (type === 'multiplier') {
+
+        color = 'magenta';
+
+        glowColor = 'magenta';
+
+        letter = 'M';
+
+      } else if (type === 'colorSwitch') {
+
+        color = 'rainbow';
+
+        glowColor = 'rainbow';
+
+        letter = 'C';
+
+      } else if (type === 'boom') {
+
+        color = '#8B0000';
+
+        glowColor = '#8B0000';
+
+        letter = 'X';
+
+      } else if (type === 'ghost') {
+
+        color = '#D3D3D3';
+
+        glowColor = '#D3D3D3';
+
+        letter = 'G';
+
+      }
+
+      return {
+
+        x,
+
+        y,
+
+        radius: 12,
+
+        speedX: Math.random() * 3 - 1.5,
+
+        speedY: Math.random() * 3 - 1.5,
+
+        type,
+
+        color,
+
+        glowColor,
+
+        letter
+
+      };
+
+    }
+
+    
+
+    function drawCircle() {
+
+      ctx.beginPath();
+
+      ctx.arc(centerX, centerY, circleRadius, 0, Math.PI * 2);
+
+      ctx.lineWidth = 5;
+
+      ctx.strokeStyle = '#ff4444';
+
+      ctx.stroke();
+
+      ctx.closePath();
+
+    }
+
+    
+
+    function drawBall(b) {
+
+      if (b === ball && whiteBallExploded) return;
+
+      ctx.beginPath();
+
+      ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2);
+
+      if (ghostModeActive && b === ball && performance.now() < ghostModeEndTime) {
+
+        ctx.fillStyle = 'rgba(211, 211, 211, 0.5)';
+
+      } else {
+
+        ctx.fillStyle = b.color;
+
+      }
+
+      ctx.fill();
+
+      ctx.closePath();
+
+    }
+
+    
+
+    function drawSpecialBall(sBall) {
+
+      let color = sBall.color;
+
+      if (sBall.type === 'colorSwitch') {
+
+        const hue = (performance.now() / 10) % 360;
+
+        color = `hsl(${hue}, 100%, 50%)`;
+
+      }
+
+      const glowAlpha = 0.5 + 0.5 * Math.sin(glowTimer);
+
+      ctx.save();
+
+      ctx.shadowColor = sBall.type === 'colorSwitch' ? color : sBall.glowColor;
+
+      ctx.shadowBlur = 15 * glowAlpha;
+
+      ctx.beginPath();
+
+      ctx.arc(sBall.x, sBall.y, sBall.radius, 0, Math.PI * 2);
+
+      ctx.fillStyle = color;
+
+      ctx.fill();
+
+      ctx.closePath();
+
+      ctx.restore();
+
+      ctx.font = 'bold 14px Arial';
+
+      ctx.fillStyle = 'white';
+
+      ctx.textAlign = 'center';
+
+      ctx.textBaseline = 'middle';
+
+      ctx.fillText(sBall.letter, sBall.x, sBall.y);
+
+    }
+
+    
+
+    function createParticles(x, y, color) {
+
+      if (particles.length > 100) return;
+
+      for (let i = 0; i < 20; i++) {
+
+        particles.push({
+
+          x,
+
+          y,
+
+          radius: Math.random() * 3 + 1,
+
+          speedX: Math.random() * 6 - 3,
+
+          speedY: Math.random() * 6 - 3,
+
+          color,
+
+          life: 30
+
+        });
+
+      }
+
+    }
+
+    
+
+    function drawParticles() {
+
+      for (let i = particles.length - 1; i >= 0; i--) {
+
+        const p = particles[i];
+
+        ctx.beginPath();
+
+        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+
+        ctx.fillStyle = p.color;
+
+        ctx.fill();
+
+        p.x += p.speedX * (teleportActive ? 0.2 : 1);
+
+        p.y += p.speedY * (teleportActive ? 0.2 : 1);
+
+        p.life--;
+
+        if (p.life <= 0) particles.splice(i, 1);
+
+      }
+
+    }
+
+    
+
+    function reflectBall(b) {
+
+      const dx = b.x - centerX;
+
+      const dy = b.y - centerY;
+
+      const distance = Math.hypot(dx, dy);
+
+      if (distance + b.radius > circleRadius) {
+
+        const nx = dx / distance;
+
+        const ny = dy / distance;
+
+        const dot = b.speedX * nx + b.speedY * ny;
+
+        b.speedX -= 2 * dot * nx;
+
+        b.speedY -= 2 * dot * ny;
+
+        const angle = Math.atan2(dy, dx);
+
+        b.x = centerX + Math.cos(angle) * (circleRadius - b.radius);
+
+        b.y = centerY + Math.sin(angle) * (circleRadius - b.radius);
+
+      }
+
+    }
+
+    
+
+    function launchBall(targetBall) {
+
+      if (!targetBall || (targetBall.isClone && !cloneBalls.includes(targetBall))) {
+
+        isDragging = false;
+
+        showDragLine = false;
+
+        return;
+
+      }
+
+      const dx = targetBall.x - dragStartX;
+
+      const dy = targetBall.y - dragStartY;
+
+      let distance = Math.hypot(dx, dy);
+
+      distance = Math.min(distance, maxDragDistance);
+
+      const ratio = distance / maxDragDistance;
+
+      const baseMaxSpeed = 15;
+
+      const maxSpeed = powerBoostActive ? baseMaxSpeed + 20 : baseMaxSpeed;
+
+      const speed = ratio * maxSpeed * (ghostModeActive && performance.now() < ghostModeEndTime ? 1.5 : 1);
+
+      if (distance > 5) {
+
+        targetBall.speedX = -dx / distance * speed;
+
+        targetBall.speedY = -dy / distance * speed;
+
+      }
+
+      currentPowerRatio = 1;
+
+      powerBoostActive = false;
+
+      powerLeftElement.textContent = `Power: 100%`;
+
+      powerLeftElement.classList.remove('pulse');
+
+      isDragging = false;
+
+      showDragLine = false;
+
+      comboCounter = 0;
+
+      rankElement.textContent = `Rank: -`;
+
+      launchSound.currentTime = 0;
+
+      launchSound.play();
+
+    }
+
+    
+
+    function attractBallsToWhite() {
+
+      const attractionSpeed = 5;
+
+      for (let i = otherBalls.length - 1; i >= 0; i--) {
+
+        const oBall = otherBalls[i];
+
+        const dx = ball.x - oBall.x;
+
+        const dy = ball.y - oBall.y;
+
+        const distance = Math.hypot(dx, dy);
+
+        if (distance > 5) {
+
+          oBall.x += (dx / distance) * attractionSpeed * (teleportActive ? 0.2 : 1);
+
+          oBall.y += (dy / distance) * attractionSpeed * (teleportActive ? 0.2 : 1);
+
+        }
+
+        if (distance < ball.radius + oBall.radius) {
+
+          createParticles(oBall.x, oBall.y, oBall.color);
+
+          collisionSound.currentTime = 0;
+
+          collisionSound.play();
+
+          score += 1;
+
+          comboCounter++;
+
+          showComboMessage();
+
+          updateRank();
+
+          timeLeft += 1;
+
+          scoreElement.textContent = `Score: ${score}`;
+
+          timeLeftElement.textContent = `Time Left: ${Math.floor(timeLeft)}`;
+
+          otherBalls.splice(i, 1);
+
+        }
+
+      }
+
+      for (let i = specialBalls.length - 1; i >= 0; i--) {
+
+        const sBall = specialBalls[i];
+
+        const dx = ball.x - sBall.x;
+
+        const dy = ball.y - sBall.y;
+
+        const distance = Math.hypot(dx, dy);
+
+        if (distance > 5) {
+
+          sBall.x += (dx / distance) * attractionSpeed * (teleportActive ? 0.2 : 1);
+
+          sBall.y += (dy / distance) * attractionSpeed * (teleportActive ? 0.2 : 1);
+
+        }
+
+        if (distance < ball.radius + sBall.radius) {
+
+          handleSpecialBallCollision(sBall, ball, i);
+
+        }
+
+      }
+
+    }
+
+    
+
+    function handleSpecialBallCollision(sBall, b, i) {
+
+      createParticles(sBall.x, sBall.y, sBall.color);
+
+      switch (sBall.type) {
+
+        case 'blackhole':
+
+          powerUpSound.currentTime = 0;
+
+          powerUpSound.play();
+
+          blackHoleActive = true;
+
+          blackHoleTimer = 2;
+
+          break;
+
+        case 'extraTime':
+
+          powerUpSound.currentTime = 0;
+
+          powerUpSound.play();
+
+          timeLeft += 5;
+
+          timeLeftElement.textContent = `Time Left: ${Math.floor(timeLeft)}`;
+
+          timeLeftElement.classList.add('grow-shrink');
+
+          setTimeout(() => timeLeftElement.classList.remove('grow-shrink'), 500);
+
+          break;
+
+        case 'powerBoost':
+
+          powerBoostSound.currentTime = 0;
+
+          powerBoostSound.play();
+
+          powerBoostActive = true;
+
+          powerLeftElement.textContent = `Power: 120%`;
+
+          powerLeftElement.classList.add('pulse');
+
+          break;
+
+        case 'blueBarrier':
+
+          activateBarrier();
+
+          break;
+
+        case 'electric':
+
+          triggerElectricEffect();
+
+          break;
+
+        case 'clone':
+
+          powerUpSound.currentTime = 0;
+
+          powerUpSound.play();
+
+          triggerCloneEffect();
+
+          break;
+
+        case 'freeze':
+
+          freezeSound.currentTime = 0;
+
+          freezeSound.play();
+
+          triggerFreezeEffect();
+
+          break;
+
+        case 'guidedMissile':
+
+          triggerGuidedMissile();
+
+          break;
+
+        case 'teleport':
+
+          triggerTeleportEffect(b);
+
+          break;
+
+        case 'multiplier':
+
+          powerUpSound.currentTime = 0;
+
+          powerUpSound.play();
+
+          const originalBalls = otherBalls.filter(ob => !ob.isTemporary);
+
+          originalBalls.forEach(oBall => {
+
+            const newBall = {
+
+              x: oBall.x + Math.random() * 20 - 10,
+
+              y: oBall.y + Math.random() * 20 - 10,
+
+              radius: oBall.radius,
+
+              color: oBall.color,
+
+              speedX: Math.random() * 4 - 2,
+
+              speedY: Math.random() * 4 - 2,
+
+              isTemporary: true
+
+            };
+
+            otherBalls.push(newBall);
+
+          });
+
+          setTimeout(() => {
+
+            otherBalls = otherBalls.filter(ob => !ob.isTemporary);
+
+          }, 8000);
+
+          break;
+
+        case 'colorSwitch':
+
+          powerUpSound.currentTime = 0;
+
+          powerUpSound.play();
+
+          blackBalls.forEach(bBall => {
+
+            const colors = ['#FF4B4B', '#5BC0EB', '#FDE74C', '#9BC53D', '#FA7921'];
+
+            bBall.color = colors[Math.floor(Math.random() * colors.length)];
+
+            otherBalls.push(bBall);
+
+          });
+
+          blackBalls = [];
+
+          break;
+
+        case 'boom':
+
+          boomSound.currentTime = 0;
+
+          boomSound.play();
+
+          triggerBlastWave(b.x, b.y);
+
+          createParticles(b.x, b.y, '#FF4500');
+
+          break;
+
+        case 'ghost':
+
+          ghostSound.currentTime = 0;
+
+          ghostSound.play();
+
+          ghostModeActive = true;
+
+          ghostModeEndTime = performance.now() + ghostModeDuration;
+
+          ball.radius = ball.baseRadius * 1.75; // 0.75 kat büyüme (1 + 0.75)
+
+          break;
+
+      }
+
+      specialBalls.splice(i, 1);
+
+    }
+
+    
+
+    function showComboMessage() {
+
+      if (comboCounter >= 3) {
+
+        comboMessageElement.textContent = `Combo x${comboCounter}!`;
+
+        comboMessageElement.style.display = 'block';
+
+        comboMessageElement.classList.remove('fade-out');
+
+        setTimeout(() => {
+
+          comboMessageElement.classList.add('fade-out');
+
+          setTimeout(() => comboMessageElement.style.display = 'none', 1000);
+
+        }, 500);
+
+      }
+
+    }
+
+    
+
+    function shakeScreen() {
+
+      canvas.classList.add('shake');
+
+      setTimeout(() => canvas.classList.remove('shake'), 500);
+
+    }
+
+    
+
+    function drawElectricEffects() {
+
+      for (let i = electricEffects.length - 1; i >= 0; i--) {
+
+        let effect = electricEffects[i];
+
+        ctx.beginPath();
+
+        ctx.moveTo(effect.x1, effect.y1);
+
+        ctx.lineTo(effect.x2, effect.y2);
+
+        let alpha = effect.timer / 2000;
+
+        ctx.strokeStyle = `rgba(0, 255, 255, ${alpha})`;
+
+        ctx.lineWidth = 3;
+
+        ctx.stroke();
+
+        effect.timer -= 16;
+
+        if (effect.timer <= 0) electricEffects.splice(i, 1);
+
+      }
+
+    }
+
+    
+
+    function updateRank() {
+
+      let rank = '-';
+
+      if (comboCounter >= 1 && comboCounter <= 2) rank = 'C';
+
+      else if (comboCounter >= 3 && comboCounter <= 4) rank = 'B';
+
+      else if (comboCounter >= 5 && comboCounter <= 6) rank = 'A';
+
+      else if (comboCounter >= 7 && comboCounter <= 8) rank = 'A++';
+
+      else if (comboCounter >= 9 && comboCounter <= 10) rank = 'S';
+
+      else if (comboCounter > 10) rank = 'SS';
+
+      rankElement.textContent = `Rank: ${rank}`;
+
+      return rank;
+
+    }
+
+    
+
+    function updateHighScoreAndRank() {
+
+      if (score > highScore) {
+
+        highScore = score;
+
+        localStorage.setItem('highScore', highScore);
+
+      }
+
+      const currentRank = updateRank();
+
+      if (['SS', 'S', 'A++', 'A', 'B', 'C'].indexOf(currentRank) < ['SS', 'S', 'A++', 'A', 'B', 'C'].indexOf(highRank) || highRank === '-') {
+
+        highRank = currentRank;
+
+        localStorage.setItem('highRank', highRank);
+
+      }
+
+      if (level > highLevel) {
+
+        highLevel = level;
+
+        localStorage.setItem('highLevel', highLevel);
+
+      }
+
+      highScoreText.textContent = `High Score: ${highScore}`;
+
+      highRankText.textContent = `High Rank: ${highRank}`;
+
+      highLevelText.textContent = `Highest Level: ${highLevel}`;
+
+    }
+
+    
+
+    function moveBall() {
+
+      if (gameOver || youWin) return;
+
+      const currentTime = performance.now();
+
+      const deltaTime = Math.min((currentTime - lastTime) / 1000, 0.1);
+
+      lastTime = currentTime;
+
+      
+
+      if (!youWin) {
+
+        timeLeft -= deltaTime;
+
+        timeLeftElement.textContent = `Time Left: ${Math.floor(timeLeft)}`;
+
+      }
+
+      
+
+      if (blackHoleActive) {
+
+        attractBallsToWhite();
+
+        blackHoleTimer -= deltaTime;
+
+        if (blackHoleTimer <= 0) blackHoleActive = false;
+
+      }
+
+      
+
+      if (ghostModeActive && performance.now() >= ghostModeEndTime) {
+
+        ghostModeActive = false;
+
+        ball.radius = ball.baseRadius; // Reset to original size
+
+      }
+
+      
+
+      if (timeLeft <= 0 && (otherBalls.length > 0 || blackBalls.length > 0 || specialBalls.length > 0)) {
+
+        if (!whiteBallExploded) {
+
+          gameOver = true;
+
+          updateHighScoreAndRank();
+
+          gameOverSound.currentTime = 0;
+
+          gameOverSound.play();
+
+          document.getElementById('gameOverText').textContent = "Game Over";
+
+          gameOverElement.style.display = 'block';
+
+          timeLeftElement.style.display = 'none';
+
+          powerLeftElement.style.display = 'none';
+
+          scoreElement.style.display = 'none';
+
+          rankElement.style.display = 'none';
+
+          levelTextElement.style.display = 'none';
+
+          livesElement.style.display = 'none';
+
+          restartBtn.style.display = 'block';
+
+          highScoreBtn.style.display = 'block';
+
+          homeBtn.style.display = 'block';
+
+        }
+
+        return;
+
+      }
+
+      
+
+      if (otherBalls.length === 0) {
+
+        if (!youWin) {
+
+          youWin = true;
+
+          const delay = electricEffects.length > 0 ? 1000 : 500;
+
+          setTimeout(() => {
+
+            youWinElement.style.display = 'block';
+
+            timeLeftElement.style.display = 'none';
+
+            powerLeftElement.style.display = 'none';
+
+            scoreElement.style.display = 'none';
+
+            rankElement.style.display = 'none';
+
+            levelTextElement.style.display = 'none';
+
+            livesElement.style.display = 'none';
+
+            setTimeout(() => {
+
+              youWinElement.style.display = 'none';
+
+              nextLevel();
+
+            }, 1000);
+
+          }, delay);
+
+        }
+
+        return;
+
+      }
+
+      
+
+      if (isDragging) {
+
+        const dragTime = performance.now() - dragStartTime;
+
+        if (dragTime >= maxDragTime) {
+
+          launchBall(isDragging === ball ? ball : cloneBalls.find(b => b === isDragging));
+
+        }
+
+      }
+
+      
+
+      const speedMultiplier = teleportActive ? 0.2 : (ghostModeActive && performance.now() < ghostModeEndTime ? 1.5 : 1);
+
+      if (!isDragging || isDragging !== ball) {
+
+        ball.x += ball.speedX * speedMultiplier;
+
+        ball.y += ball.speedY * speedMultiplier;
+
+        reflectBall(ball);
+
+        ball.speedX *= 0.995;
+
+        ball.speedY *= 0.995;
+
+        if (Math.abs(ball.speedX) < 0.1 && Math.abs(ball.speedY) < 0.1) {
+
+          powerLeftElement.textContent = `Power: ${powerBoostActive ? 120 : 100}%`;
+
+          comboCounter = 0;
+
+          updateRank();
+
+        }
+
+      }
+
+      
+
+      cloneBalls.forEach(cloneBall => {
+
+        if (!isDragging || isDragging !== cloneBall) {
+
+          cloneBall.x += cloneBall.speedX * speedMultiplier;
+
+          cloneBall.y += cloneBall.speedY * speedMultiplier;
+
+          reflectBall(cloneBall);
+
+          cloneBall.speedX *= 0.995;
+
+          cloneBall.speedY *= 0.995;
+
+        }
+
+      });
+
+      
+
+      for (let i = guidedMissiles.length - 1; i >= 0; i--) {
+
+        const missile = guidedMissiles[i];
+
+        if (!blackBalls.includes(missile.target)) {
+
+          guidedMissiles.splice(i, 1);
+
+          guidedMissileSound.pause();
+
+          guidedMissileSound.currentTime = 0;
+
+          continue;
+
+        }
+
+        missile.timeAlive += deltaTime;
+
+        missile.speed = Math.min(4 + Math.floor(missile.timeAlive) * 0.5, missile.maxSpeed);
+
+        const dx = missile.target.x - missile.x;
+
+        const dy = missile.target.y - missile.y;
+
+        const distance = Math.hypot(dx, dy);
+
+        if (distance > missile.speed * speedMultiplier) {
+
+          missile.x += (dx / distance) * missile.speed * speedMultiplier;
+
+          missile.y += (dy / distance) * missile.speed * speedMultiplier;
+
+        } else {
+
+          missile.x = missile.target.x;
+
+          missile.y = missile.target.y;
+
+        }
+
+        for (let j = blackBalls.length - 1; j >= 0; j--) {
+
+          const blackBall = blackBalls[j];
+
+          const dx2 = missile.x - blackBall.x;
+
+          const dy2 = missile.y - blackBall.y;
+
+          const dist = Math.hypot(dx2, dy2);
+
+          if (dist < missile.radius + blackBall.radius) {
+
+            createParticles(blackBall.x, blackBall.y, blackBall.color);
+
+            collisionSound.currentTime = 0;
+
+            collisionSound.play();
+
+            blackBalls.splice(j, 1);
+
+            guidedMissiles.splice(i, 1);
+
+            guidedMissileSound.pause();
+
+            guidedMissileSound.currentTime = 0;
+
+            break;
+
+          }
+
+        }
+
+        const dxFromCenter = missile.x - centerX;
+
+        const dyFromCenter = missile.y - centerY;
+
+        const distanceFromCenter = Math.hypot(dxFromCenter, dyFromCenter);
+
+        if (distanceFromCenter + missile.radius > circleRadius) {
+
+          guidedMissiles.splice(i, 1);
+
+          guidedMissileSound.pause();
+
+          guidedMissileSound.currentTime = 0;
+
+        }
+
+      }
+
+      
+
+      if (!freezeActive || performance.now() > freezeEndTime) {
+
+        otherBalls.forEach(oBall => {
+
+          oBall.x += oBall.speedX * speedMultiplier;
+
+          oBall.y += oBall.speedY * speedMultiplier;
+
+          reflectBall(oBall);
+
+        });
+
+        blackBalls.forEach(blackBall => {
+
+          blackBall.x += blackBall.speedX * speedMultiplier;
+
+          blackBall.y += blackBall.speedY * speedMultiplier;
+
+          reflectBall(blackBall);
+
+        });
+
+        specialBalls.forEach(sBall => {
+
+          sBall.x += sBall.speedX * speedMultiplier;
+
+          sBall.y += sBall.speedY * speedMultiplier;
+
+          reflectBall(sBall);
+
+        });
+
+      }
+
+      
+
+      for (let i = otherBalls.length - 1; i >= 0; i--) {
+
+        const oBall = otherBalls[i];
+
+        [ball, ...cloneBalls].forEach(b => {
+
+          if (b && (!isDragging || isDragging !== b)) {
+
+            const dx = b.x - oBall.x;
+
+            const dy = b.y - oBall.y;
+
+            const dist = Math.hypot(dx, dy);
+
+            if (dist < b.radius + oBall.radius) {
+
+              createParticles(oBall.x, oBall.y, oBall.color);
+
+              collisionSound.currentTime = 0;
+
+              collisionSound.play();
+
+              const collisionAngle = Math.atan2(dy, dx);
+
+              const speed = Math.hypot(b.speedX, b.speedY);
+
+              b.speedX = Math.cos(collisionAngle) * speed * 1.05;
+
+              b.speedY = Math.sin(collisionAngle) * speed * 1.05;
+
+              timeLeft += 1;
+
+              score += 1;
+
+              comboCounter++;
+
+              showComboMessage();
+
+              updateRank();
+
+              scoreElement.textContent = `Score: ${score}`;
+
+              timeLeftElement.textContent = `Time Left: ${Math.floor(timeLeft)}`;
+
+              otherBalls.splice(i, 1);
+
+            }
+
+          }
+
+        });
+
+      }
+
+      
+
+      for (let i = blackBalls.length - 1; i >= 0; i--) {
+
+        const blackBall = blackBalls[i];
+
+        [ball, ...cloneBalls].forEach(b => {
+
+          if (b) {
+
+            const dx = b.x - blackBall.x;
+
+            const dy = b.y - blackBall.y;
+
+            const dist = Math.hypot(dx, dy);
+
+            if (dist < b.radius + blackBall.radius) {
+
+              collisionSound.currentTime = 0;
+
+              collisionSound.play();
+
+              if (barrierActive || (ghostModeActive && performance.now() < ghostModeEndTime)) {
+
+                shieldSound.currentTime = 0;
+
+                shieldSound.play();
+
+              } else if (!b.isClone) {
+
+                if (lives > 0) {
+
+                  shakeScreen();
+
+                  lives--;
+
+                  livesElement.textContent = `Lives: ${lives}`;
+
+                  b.x = centerX;
+
+                  b.y = centerY;
+
+                  b.speedX = 0;
+
+                  b.speedY = 0;
+
+                  isDragging = false;
+
+                } else {
+
+                  createParticles(b.x, b.y, b.color);
+
+                  whiteBallExploded = true;
+
+                  gameOverSound.currentTime = 0;
+
+                  gameOverSound.play();
+
+                  updateHighScoreAndRank();
+
+                  setTimeout(() => {
+
+                    gameOver = true;
+
+                    document.getElementById('gameOverText').textContent = "Game Over";
+
+                    gameOverElement.style.display = 'block';
+
+                    timeLeftElement.style.display = 'none';
+
+                    powerLeftElement.style.display = 'none';
+
+                    scoreElement.style.display = 'none';
+
+                    rankElement.style.display = 'none';
+
+                    levelTextElement.style.display = 'none';
+
+                    livesElement.style.display = 'none';
+
+                    restartBtn.style.display = 'block';
+
+                    highScoreBtn.style.display = 'block';
+
+                    homeBtn.style.display = 'block';
+
+                  }, 1000);
+
+                }
+
+              }
+
+            }
+
+          }
+
+        });
+
+      }
+
+      
+
+      for (let i = specialBalls.length - 1; i >= 0; i--) {
+
+        const sBall = specialBalls[i];
+
+        [ball, ...cloneBalls].forEach(b => {
+
+          if (b && (!isDragging || isDragging !== b)) {
+
+            const dx = b.x - sBall.x;
+
+            const dy = b.y - sBall.y;
+
+            const dist = Math.hypot(dx, dy);
+
+            if (dist < b.radius + sBall.radius) {
+
+              handleSpecialBallCollision(sBall, b, i);
+
+            }
+
+          }
+
+        });
+
+      }
+
+      
+
+      if (teleportActive && performance.now() >= teleportEndTime) {
+
+        teleportActive = false;
+
+        teleportTargetBall = null;
+
+        teleportAnimationProgress = 0;
+
+      }
+
+      drawElectricEffects();
+
+    }
+
+    
+
+    function draw() {
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      drawCircle();
+
+      if (!whiteBallExploded) {
+
+        drawBall(ball);
+
+        drawTeleportEffect(ball);
+
+      }
+
+      cloneBalls.forEach(b => {
+
+        drawBall(b);
+
+        drawTeleportEffect(b);
+
+      });
+
+      otherBalls.forEach(drawBall);
+
+      blackBalls.forEach(drawBall);
+
+      specialBalls.forEach(drawSpecialBall);
+
+      guidedMissiles.forEach(missile => {
+
+        const glowAlpha = 0.5 + 0.5 * Math.sin(glowTimer);
+
+        ctx.save();
+
+        ctx.shadowColor = Math.sin(glowTimer) > 0 ? 'red' : 'white';
+
+        ctx.shadowBlur = 15 * glowAlpha;
+
+        ctx.beginPath();
+
+        ctx.arc(missile.x, missile.y, missile.radius, 0, Math.PI * 2);
+
+        ctx.fillStyle = Math.sin(glowTimer) > 0 ? 'red' : 'white';
+
+        ctx.fill();
+
+        ctx.closePath();
+
+        ctx.restore();
+
+      });
+
+      drawParticles();
+
+      drawBlastWave();
+
+      drawBarrier(ball);
+
+      cloneBalls.forEach(drawBarrier);
+
+      
+
+      if (gameStarted && !gameOver && !youWin) {
+
+        if (showDragLine && isDragging) {
+
+          const targetBall = isDragging === ball ? ball : cloneBalls.find(b => b === isDragging);
+
+          if (!targetBall) {
+
+            isDragging = false;
+
+            showDragLine = false;
+
+            return;
+
+          }
+
+          ctx.beginPath();
+
+          ctx.arc(dragStartX, dragStartY, maxDragDistance, 0, Math.PI * 2);
+
+          ctx.strokeStyle = 'rgba(255, 255, 0, 0.1)';
+
+          ctx.stroke();
+
+          ctx.beginPath();
+
+          ctx.moveTo(dragStartX, dragStartY);
+
+          ctx.lineTo(targetBall.x, targetBall.y);
+
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
+
+          ctx.lineWidth = 3;
+
+          ctx.stroke();
+
+          const dragTime = performance.now() - dragStartTime;
+
+          const dragTimeRatio = Math.min(dragTime / maxDragTime, 1);
+
+          ctx.beginPath();
+
+          ctx.arc(targetBall.x, targetBall.y, targetBall.radius * 1.5, 0, Math.PI * 2 * dragTimeRatio);
+
+          ctx.strokeStyle = `rgba(255, ${255 * (1 - dragTimeRatio)}, ${255 * (1 - dragTimeRatio)}, 0.8)`;
+
+          ctx.lineWidth = 3;
+
+          ctx.stroke();
+
+          const dx = targetBall.x - dragStartX;
+
+          const dy = targetBall.y - dragStartY;
+
+          let distance = Math.hypot(dx, dy);
+
+          distance = Math.min(distance, maxDragDistance);
+
+          const ratio = distance / maxDragDistance;
+
+          currentPowerRatio = ratio;
+
+          const displayPower = powerBoostActive ? 120 : 100;
+
+          powerLeftElement.textContent = `Power: ${Math.floor(ratio * displayPower)}%`;
+
+          ctx.beginPath();
+
+          ctx.arc(targetBall.x, targetBall.y, targetBall.radius * (1 + ratio * (displayPower / 100)), 0, Math.PI * 2);
+
+          ctx.strokeStyle = `rgba(${255 * ratio}, ${255 * (1 - ratio)}, 0, 0.7)`;
+
+          ctx.lineWidth = 2;
+
+          ctx.stroke();
+
+          const vx = dragStartX - targetBall.x;
+
+          const vy = dragStartY - targetBall.y;
+
+          const arrowAngle = Math.atan2(-vy, -vx);
+
+          const arrowLength = 20;
+
+          const arrowBaseX = dragStartX;
+
+          const arrowBaseY = dragStartY;
+
+          ctx.beginPath();
+
+          ctx.moveTo(arrowBaseX + Math.cos(arrowAngle - 0.4) * arrowLength, arrowBaseY + Math.sin(arrowAngle - 0.4) * arrowLength);
+
+          ctx.lineTo(arrowBaseX, arrowBaseY);
+
+          ctx.lineTo(arrowBaseX + Math.cos(arrowAngle + 0.4) * arrowLength, arrowBaseY + Math.sin(arrowAngle + 0.4) * arrowLength);
+
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+
+          ctx.lineWidth = 3;
+
+          ctx.stroke();
+
+        }
+
+        moveBall();
+
+      }
+
+      
+
+      glowTimer += 0.1;
+
+      if (glowTimer > Math.PI * 2) glowTimer -= Math.PI * 2;
+
+      requestAnimationFrame(draw);
+
+    }
+
+    
+
+    function startDragging(e) {
+
+      if (!gameStarted || gameOver || youWin) return;
+
+      const rect = canvas.getBoundingClientRect();
+
+      let mouseX, mouseY;
+
+      if (e.type === 'touchstart') {
+
+        mouseX = e.touches[0].clientX - rect.left;
+
+        mouseY = e.touches[0].clientY - rect.top;
+
+      } else {
+
+        mouseX = e.clientX - rect.left;
+
+        mouseY = e.clientY - rect.top;
+
+      }
+
+      const interactionRadius = powerBoostActive ? ball.radius * 6 : ball.radius * 3;
+
+      let dx = mouseX - ball.x;
+
+      let dy = mouseY - ball.y;
+
+      let distance = Math.hypot(dx, dy);
+
+      const distFromCenter = Math.hypot(ball.x - centerX, ball.y - centerY);
+
+      if (distance < interactionRadius || (distFromCenter + ball.radius >= circleRadius - 5 && distance < interactionRadius * 2)) {
+
+        isDragging = ball;
+
+        dragStartX = ball.x;
+
+        dragStartY = ball.y;
+
+        dragStartTime = performance.now();
+
+        showDragLine = true;
+
+        ball.speedX = 0;
+
+        ball.speedY = 0;
+
+        return;
+
+      }
+
+      for (let cloneBall of cloneBalls) {
+
+        dx = mouseX - cloneBall.x;
+
+        dy = mouseY - cloneBall.y;
+
+        distance = Math.hypot(dx, dy);
+
+        const cloneDistFromCenter = Math.hypot(cloneBall.x - centerX, cloneBall.y - centerY);
+
+        if (distance < interactionRadius || (cloneDistFromCenter + cloneBall.radius >= circleRadius - 5 && distance < interactionRadius * 2)) {
+
+          isDragging = cloneBall;
+
+          dragStartX = cloneBall.x;
+
+          dragStartY = cloneBall.y;
+
+          dragStartTime = performance.now();
+
+          showDragLine = true;
+
+          cloneBall.speedX = 0;
+
+          cloneBall.speedY = 0;
+
+          return;
+
+        }
+
+      }
+
+    }
+
+    
+
+    function moveDragging(e) {
+
+      if (!gameStarted || gameOver || youWin || !isDragging || teleportActive) return;
+
+      const rect = canvas.getBoundingClientRect();
+
+      let mouseX, mouseY;
+
+      if (e.type === 'touchmove') {
+
+        mouseX = e.touches[0].clientX - rect.left;
+
+        mouseY = e.touches[0].clientY - rect.top;
+
+      } else {
+
+        mouseX = e.clientX - rect.left;
+
+        mouseY = e.clientY - rect.top;
+
+      }
+
+      const targetBall = isDragging === ball ? ball : cloneBalls.find(b => b === isDragging);
+
+      if (!targetBall) {
+
+        isDragging = false;
+
+        showDragLine = false;
+
+        return;
+
+      }
+
+      const dx = mouseX - dragStartX;
+
+      const dy = mouseY - dragStartY;
+
+      let distance = Math.hypot(dx, dy);
+
+      if (distance > maxDragDistance) {
+
+        const angle = Math.atan2(dy, dx);
+
+        targetBall.x = dragStartX + Math.cos(angle) * maxDragDistance;
+
+        targetBall.y = dragStartY + Math.sin(angle) * maxDragDistance;
+
+      } else {
+
+        targetBall.x = mouseX;
+
+        targetBall.y = mouseY;
+
+      }
+
+    }
+
+    
+
+    function stopDragging() {
+
+      if (!gameStarted || gameOver || youWin || !isDragging || teleportActive) return;
+
+      launchBall(isDragging);
+
+    }
+
+    
+
+    canvas.addEventListener('mousedown', startDragging);
+
+    canvas.addEventListener('mousemove', moveDragging);
+
+    canvas.addEventListener('mouseup', stopDragging);
+
+    canvas.addEventListener('touchstart', startDragging);
+
+    canvas.addEventListener('touchmove', moveDragging);
+
+    canvas.addEventListener('touchend', stopDragging);
+
+    
+
+    startBtn.addEventListener('click', () => {
+
+      gameStarted = true;
+
+      startBtn.style.display = 'none';
+
+      instructionBtn.style.display = 'none';
+
+      restartBtn.style.display = 'none';
+
+      highScoreBtn.style.display = 'none';
+
+      resetGame();
+
+    });
+
+    
+
+    instructionBtn.addEventListener('click', () => {
+
+      instructionsOverlay.style.display = 'flex';
+
+    });
+
+    
+
+    backBtn.addEventListener('click', () => {
+
+      instructionsOverlay.style.display = 'none';
+
+    });
+
+    
+
+    restartBtn.addEventListener('click', () => {
+
+      gameStarted = true;
+
+      gameOver = false;
+
+      restartBtn.style.display = 'none';
+
+      highScoreBtn.style.display = 'none';
+
+      homeBtn.style.display = 'none';
+
+      gameOverElement.style.display = 'none';
+
+      resetGame();
+
+    });
+
+    
+
+    highScoreBtn.addEventListener('click', () => {
+
+      highScoreText.textContent = `High Score: ${highScore}`;
+
+      highRankText.textContent = `High Rank: ${highRank}`;
+
+      highLevelText.textContent = `Highest Level: ${highLevel}`;
+
+      highScoreOverlay.style.display = 'flex';
+
+    });
+
+    
+
+    closeHighScore.addEventListener('click', () => {
+
+      highScoreOverlay.style.display = 'none';
+
+    });
+
+    
+
+    homeBtn.addEventListener('click', () => {
+
+      gameStarted = false;
+
+      gameOver = false;
+
+      youWin = false;
+
+      gameOverElement.style.display = 'none';
+
+      restartBtn.style.display = 'none';
+
+      highScoreBtn.style.display = 'none';
+
+      homeBtn.style.display = 'none';
+
+      startBtn.style.display = 'block';
+
+      instructionBtn.style.display = 'block';
+
+    });
+
+    
+
+    requestAnimationFrame(draw);
+
+  </script>
+
+</body>
+
+</html>
